@@ -1,6 +1,9 @@
 package news
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Image struct {
 	Size string `json:"size"`
@@ -36,6 +39,23 @@ type Story struct {
 type Stories []Story
 
 // Implement unmarshal for Created, Updated.
-func (*Story) UnmarshalJSON([]byte) error {
+func (s *Story) UnmarshalJSON(data []byte) error {
+	type TempStory Story
 
+	tmp := struct {
+		Created int `json:"created,string"`
+		Updated int `json:"updated,string"`
+		*TempStory
+	}{
+		TempStory: (*TempStory)(s),
+	}
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	s.Created = time.Unix(int64(tmp.Created), 0)
+	s.Updated = time.Unix(int64(tmp.Updated), 0)
+
+	return nil
 }

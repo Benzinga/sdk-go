@@ -47,7 +47,6 @@ type Params struct {
 	Tickers        []string      `form:"tickers"`
 	Topics         []string      `form:"topics"`
 	CUSIPs         []string      `form:"cusips"`
-	APIToken       string        //TODO(darwin)
 }
 
 type OutputOption int
@@ -97,91 +96,117 @@ func (s SortOption) String() string {
 type Request struct {
 	*Client
 	params   Params
+	apiToken string
 	hostname string
 }
 
 func (c *Client) NewRequest() *Request {
-	return &Request{c, Params{}, ""}
+	return &Request{c, Params{}, "", ""}
 }
 
-func (r *Request) AddChannels(channels ...string) {
+func (r *Request) SetAPIToken(token string) *Request {
+	r.apiToken = token
+	return r
+}
+
+func (r *Request) AddChannels(channels ...string) *Request {
 	r.params.Channels = append(r.params.Channels, channels...)
+	return r
 }
 
-func (r *Request) SetChannels(channels ...string) {
+func (r *Request) SetChannels(channels ...string) *Request {
 	r.params.Channels = channels
+	return r
 }
 
-func (r *Request) AddTickers(tickers ...string) {
+func (r *Request) AddTickers(tickers ...string) *Request {
 	r.params.Tickers = append(r.params.Tickers, tickers...)
+	return r
 }
 
-func (r *Request) SetTickers(tickers ...string) {
+func (r *Request) SetTickers(tickers ...string) *Request {
 	r.params.Tickers = tickers
+	return r
 }
 
-func (r *Request) AddTopics(topics ...string) {
+func (r *Request) AddTopics(topics ...string) *Request {
 	r.params.Topics = append(r.params.Topics, topics...)
+	return r
 }
 
-func (r *Request) SetTopics(topics ...string) {
+func (r *Request) SetTopics(topics ...string) *Request {
 	r.params.Topics = topics
+	return r
 }
 
-func (r *Request) AddCUSIPs(cusips ...string) {
+func (r *Request) AddCUSIPs(cusips ...string) *Request {
 	r.params.CUSIPs = append(r.params.Topics, cusips...)
+	return r
 }
 
-func (r *Request) SetCUSIPs(cusips ...string) {
+func (r *Request) SetCUSIPs(cusips ...string) *Request {
 	r.params.CUSIPs = cusips
+	return r
 }
 
-func (r *Request) SetDate(date time.Time) {
+func (r *Request) SetDate(date time.Time) *Request {
 	r.params.Date = date
+	return r
 }
 
-func (r *Request) SetDateFrom(dateFrom time.Time) {
+func (r *Request) SetDateFrom(dateFrom time.Time) *Request {
 	r.params.DateFrom = dateFrom
+	return r
 }
 
-func (r *Request) SetDateTo(dateTo time.Time) {
+func (r *Request) SetDateTo(dateTo time.Time) *Request {
 	r.params.DateTo = dateTo
+	return r
 }
 
-func (r *Request) SetPublishedSince(publishedSince time.Time) {
+func (r *Request) SetPublishedSince(publishedSince time.Time) *Request {
 	r.params.PublishedSince = publishedSince
+	return r
 }
 
-func (r *Request) SetUpdatedSince(updatedSince time.Time) {
+func (r *Request) SetUpdatedSince(updatedSince time.Time) *Request {
 	r.params.UpdatedSince = updatedSince
+	return r
 }
 
-func (r *Request) SetDisplayOutput(outputOption OutputOption) {
+func (r *Request) SetDisplayOutput(outputOption OutputOption) *Request {
 	r.params.DisplayOutput = &outputOption
+	return r
 }
 
-func (r *Request) SetPageSize(n int) {
+func (r *Request) SetPageSize(n int) *Request {
 	r.params.PageSize = n
+	return r
 }
 
-func (r *Request) SetPage(n int) {
+func (r *Request) SetPage(n int) *Request {
 	r.params.Page = n
+	return r
 }
 
-func (r *Request) SetSortField(f SortField) {
+func (r *Request) SetSortField(f SortField) *Request {
 	if r.params.Sort == nil {
 		r.params.Sort = &SortOption{}
 	}
 
 	r.params.Sort.Field = f
+
+	return r
 }
 
-func (r *Request) SetSortDirection(d SortDirection) {
+func (r *Request) SetSortDirection(d SortDirection) *Request {
 	if r.params.Sort == nil {
 		r.params.Sort = &SortOption{}
 	}
 
 	r.params.Sort.Direction = d
+
+	return r
 }
 
 func (r *Request) URL() (*url.URL, error) {
@@ -191,6 +216,8 @@ func (r *Request) URL() (*url.URL, error) {
 	}
 
 	q := u.Query()
+
+	q.Set("token", r.apiToken)
 
 	if len(r.params.Channels) > 0 {
 		q.Set("channels", strings.Join(r.params.Channels, ","))
