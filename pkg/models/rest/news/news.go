@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const NewsTimeFormat = "Mon, 02 Jan 2006 15:04:05 -0700"
+
 type Image struct {
 	Size string `json:"size"`
 	URL  string `json:"url"`
@@ -43,19 +45,27 @@ func (s *Story) UnmarshalJSON(data []byte) error {
 	type TempStory Story
 
 	tmp := struct {
-		Created int `json:"created,string"`
-		Updated int `json:"updated,string"`
+		Created string `json:"created"`
+		Updated string `json:"updated"`
 		*TempStory
 	}{
 		TempStory: (*TempStory)(s),
 	}
 
-	if err := json.Unmarshal(data, &tmp); err != nil {
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
 		return err
 	}
 
-	s.Created = time.Unix(int64(tmp.Created), 0)
-	s.Updated = time.Unix(int64(tmp.Updated), 0)
+	s.Created, err = time.Parse(NewsTimeFormat, tmp.Created)
+	if err != nil {
+		return err
+	}
+
+	s.Updated, err = time.Parse(NewsTimeFormat, tmp.Updated)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -18,3 +18,5 @@
 *.DS_Store
 .cover/
 .idea/
+dist/
+build/
