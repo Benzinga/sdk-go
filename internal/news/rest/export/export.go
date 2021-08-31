@@ -5,18 +5,17 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"path"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/manifoldco/promptui"
 	"go.uber.org/zap"
 
 	"github.com/Benzinga/sdk-go/benzinga"
 	"github.com/Benzinga/sdk-go/internal/cli"
+	"github.com/Benzinga/sdk-go/internal/cli/prompt"
 	"github.com/Benzinga/sdk-go/pkg/client/rest/news"
 )
 
@@ -137,7 +136,10 @@ func handleDate(ctx context.Context, client *benzinga.Client, dirPrefix, token s
 func Start(config *Config) {
 	client := benzinga.NewClient(nil)
 
-	token := getToken()
+	token, err := prompt.ForStringMasked("API Token")
+	if err != nil {
+		zap.L().Error("API token error", zap.Error(err))
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -183,52 +185,15 @@ func Start(config *Config) {
 	zap.L().Info("exiting.")
 }
 
-func getToken() string {
-	validate := func(input string) error {
-		if input == "" {
-			return errors.New("API Token must not be empty")
-		}
-		return nil
-	}
-
-	prompt := promptui.Prompt{
-		Label:    "API Token",
-		Validate: validate,
-		Mask:     '*',
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		zap.L().Fatal("api token error", zap.Error(err))
-
-		return ""
-	}
-
-	return result
-}
-
 func getDirectory() string {
-	validate := func(input string) error {
-		if input == "" {
-			return errors.New("Directory must not be empty")
-		}
-		return nil
-	}
-
-	prompt := promptui.Prompt{
-		AllowEdit: true,
-		Label:     "Export Directory",
-		Validate:  validate,
-	}
-
-	result, err := prompt.Run()
+	val, err := prompt.ForString("Export Directory")
 	if err != nil {
 		zap.L().Fatal("output directory error", zap.Error(err))
 
 		return ""
 	}
 
-	return result
+	return val
 }
 
 func CreateDirIfNotExist(dir string) {
